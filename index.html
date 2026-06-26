@@ -781,6 +781,11 @@
     head.textContent = dateObj.toLocaleDateString('th-TH', { day:'numeric', month:'long', year:'numeric' });
     els.calDetail.appendChild(head);
 
+    var diaryIconWrap = document.createElement('div'); diaryIconWrap.className = 'big-icon-wrap';
+    diaryIconWrap.style.margin = '4px auto 6px';
+    diaryIconWrap.innerHTML = ICON_DIARY;
+    els.calDetail.appendChild(diaryIconWrap);
+
     PEOPLE.forEach(function(name){
       var st = statusData[name] || {};
       var h = (st.history && st.history[selectedDateIso]) || {};
@@ -886,6 +891,13 @@
     '<line x1="70" y1="50" x2="96" y2="54" stroke="#C9C2B4" stroke-width="2"/>' +
     '<line x1="70" y1="60" x2="96" y2="64" stroke="#C9C2B4" stroke-width="2"/>' +
     '</g></svg>';
+
+  var ICON_DIARY = '<svg viewBox="0 0 120 100">' +
+    '<path d="M10,18 Q10,8 20,8 L100,8 Q110,8 110,18 L110,58 Q110,68 100,68 L46,68 L24,88 L24,68 L20,68 Q10,68 10,58 Z" fill="#FFD9DE" stroke="#2B2420" stroke-width="4"/>' +
+    '<line x1="28" y1="28" x2="92" y2="28" stroke="#2B2420" stroke-width="4" stroke-linecap="round"/>' +
+    '<line x1="28" y1="42" x2="76" y2="42" stroke="#2B2420" stroke-width="4" stroke-linecap="round"/>' +
+    '<path d="M94,42 Q88,34 82,40 Q80,44 88,52 Q96,44 94,42 Z" fill="#E27272" stroke="#2B2420" stroke-width="2.5"/>' +
+    '</svg>';
 
   var ACTIVITY_ICONS = {
     'กินข้าว': ICON_EAT,
