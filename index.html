@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>จอแบน × ซันนี่</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;600;700&family=Sarabun:wght@400;500;600&family=Kanit:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FBF6ED;
+    --paper-card:#FFFDF8;
+    --paper-shadow:#E8DCC4;
+    --ink:#4A3F35;
+    --ink-soft:#8C7E6C;
+    --jorbaen:#6E8B74;
+    --jorbaen-soft:#E3ECDF;
+    --sunny:#C98A2B;
+    --sunny-soft:#FBEDD3;
+    --tape:#F2C9CE;
+  }
+  body.theme-night{
+    --paper:#1F1B2E;
+    --paper-card:#2B2640;
+    --paper-shadow:#3D3656;
+    --ink:#EDE7F6;
+    --ink-soft:#AFA5C9;
+    --tape:#5C4A66;
+  }
+  *{ box-sizing:border-box; }
+  html,body{
+    margin:0; min-height:100vh;
+    background:var(--paper);
+    font-family:'Sarabun', sans-serif;
+    color:var(--ink);
+    padding:28px 16px 40px;
+    transition:background .5s ease, color .5s ease;
+  }
+  .wrap{ max-width:720px; margin:0 auto; position:relative; z-index:1; }
+  #identityGate{ position:relative; z-index:1; display:flex; align-items:center; justify-content:center; min-height:70vh; }
+
+  .sky-day, .sky-night{ position:fixed; inset:0; overflow:hidden; pointer-events:none; z-index:0; display:none; }
+  body.theme-day .sky-day{ display:block; }
+  body.theme-night .sky-night{ display:block; }
+  .sun-icon{ position:absolute; top:22px; right:26px; font-size:38px; opacity:.85; }
+  .cloud{ position:absolute; font-size:28px; opacity:.5; animation:driftCloud linear infinite; }
+  .cloud.c1{ top:50px; left:-12%; animation-duration:42s; }
+  .cloud.c2{ top:110px; left:-12%; animation-duration:58s; animation-delay:9s; font-size:22px; }
+  .cloud.c3{ top:30px; left:-12%; animation-duration:50s; animation-delay:22s; font-size:18px; }
+  @keyframes driftCloud{ from{ transform:translateX(0); } to{ transform:translateX(120vw); } }
+  @media (prefers-reduced-motion: reduce){ .cloud{ animation:none; opacity:.35; } }
+  .moon-icon{ position:absolute; top:24px; right:28px; font-size:34px; opacity:.9; }
+  .star{ position:absolute; color:#F4EEFF; }
+  @media (prefers-reduced-motion: no-preference){ .star{ animation:twinkle 2.6s ease-in-out infinite; } }
+  @keyframes twinkle{ 0%,100%{ opacity:.25; } 50%{ opacity:1; } }
+
+  .gate-card{
+    background:var(--paper-card); border-radius:14px;
+    box-shadow:0 14px 30px -10px rgba(0,0,0,0.25);
+    padding:36px 28px; text-align:center; max-width:340px;
+  }
+  .gate-eyebrow{ font-size:12px; color:var(--ink-soft); margin:0 0 6px; }
+  .gate-title{ font-family:'Mali', cursive; font-weight:700; font-size:26px; margin:0 0 22px; }
+  .gate-buttons{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+  .gate-btn{
+    font-family:'Mali', cursive; font-weight:700; font-size:18px;
+    padding:14px 26px; border-radius:14px; border:2px solid transparent;
+    cursor:pointer; color:#fff;
+  }
+  .gate-btn.jorbaen{ background:var(--jorbaen); }
+  .gate-btn.sunny{ background:var(--sunny); }
+
+  header{ text-align:center; margin-bottom:6px; }
+  .app-title{ font-family:'Mali', cursive; font-weight:700; font-size:28px; margin:0; }
+  .date-line{ font-size:12.5px; color:var(--ink-soft); margin:6px 0 2px; }
+  .time-chip{
+    display:inline-block; font-family:'Kanit', sans-serif; font-weight:600; font-size:16px;
+    background:var(--paper-card); border:1.5px solid var(--paper-shadow); border-radius:10px;
+    padding:4px 12px; margin:2px 0 20px;
+  }
+
+  .anniv-banner{
+    display:flex; align-items:center; justify-content:center; gap:16px;
+    background:var(--paper-card); border-radius:14px; border:1.5px solid var(--paper-shadow);
+    box-shadow:0 8px 18px -6px rgba(0,0,0,0.18);
+    padding:16px 22px; margin:0 auto 22px; max-width:380px;
+  }
+  .anniv-stat{ text-align:center; }
+  .anniv-num{ font-family:'Kanit', sans-serif; font-weight:600; font-size:25px; color:var(--ink); }
+  .anniv-lbl{ font-size:10px; color:var(--ink-soft); margin-top:2px; }
+  .anniv-divider{ font-size:18px; }
+
+  .cards-row{ display:flex; gap:18px; flex-wrap:wrap; justify-content:center; }
+  .note-card{
+    flex:1 1 280px; max-width:320px;
+    background:var(--paper-card); border-radius:6px;
+    box-shadow:0 10px 22px -6px rgba(0,0,0,0.22);
+    padding:26px 18px 18px; position:relative; margin-top:18px;
+  }
+  .note-card.tilt-l{ transform:rotate(-1.4deg); }
+  .note-card.tilt-r{ transform:rotate(1.4deg); }
+  .tape{
+    position:absolute; top:-11px; left:50%; transform:translateX(-50%) rotate(-3deg);
+    width:74px; height:24px; background:var(--tape); opacity:.9;
+    box-shadow:0 1px 2px rgba(0,0,0,.12);
+  }
+
+  .top-row{ display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:4px; }
+  .avatar-wrap{ width:108px; height:108px; position:relative; flex:none; }
+  .avatar-wrap.editable{ cursor:pointer; }
+  .avatar-glow{ position:absolute; inset:-6px; border-radius:50%; z-index:0; background:var(--paper-shadow); }
+  @media (prefers-reduced-motion: no-preference){ .avatar-glow.spin{ animation:avatarspin 2.4s linear infinite; } }
+  @keyframes avatarspin{ to{ transform:rotate(360deg); } }
+  .avatar-ring{
+    position:relative; z-index:1; width:100%; height:100%; border-radius:50%; overflow:hidden;
+    border:4px solid #fff; background:#fff;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .avatar-ring img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .avatar-placeholder{
+    width:100%; height:100%; display:flex; align-items:center; justify-content:center;
+    font-family:'Mali', cursive; font-weight:700; font-size:44px; color:#fff;
+  }
+  .avatar-badge{
+    position:absolute; bottom:-4px; right:-4px; width:38px; height:38px; border-radius:50%; z-index:2;
+    background:#fff; display:flex; align-items:center; justify-content:center; font-size:20px;
+    box-shadow:0 1px 4px rgba(0,0,0,.3);
+  }
+  .mascot{ flex:none; }
+  @media (prefers-reduced-motion: no-preference){
+    .mascot-anim{ animation:mascotdance 0.9s ease-in-out infinite; transform-origin:50% 95%; }
+  }
+  @keyframes mascotdance{ 0%,100%{ transform:rotate(-5deg); } 50%{ transform:rotate(5deg) translateY(-3px); } }
+
+  .name-tag{ font-family:'Mali', cursive; font-weight:700; font-size:21px; text-align:center; margin:8px 0 0; }
+  .name-tag.jorbaen{ color:var(--jorbaen); }
+  .name-tag.sunny{ color:var(--sunny); }
+  .avatar-edit-hint{ text-align:center; font-size:10.5px; color:var(--ink-soft); margin:2px 0 12px; }
+
+  .status-line{
+    display:flex; align-items:baseline; justify-content:space-between;
+    font-size:13.5px; padding:7px 0; border-bottom:1px dashed var(--paper-shadow);
+  }
+  .status-line .lbl{ color:var(--ink-soft); }
+  .status-line .val{ font-family:'Kanit', sans-serif; font-weight:600; }
+  .sleep-dur{ font-size:11.5px; color:var(--ink-soft); text-align:right; margin:-2px 0 4px; }
+
+  .checkin-btn{
+    display:block; width:100%; font-family:'Sarabun'; font-weight:600; font-size:14px;
+    padding:11px 0; margin-top:8px; border-radius:12px; border:none; cursor:pointer; color:#fff;
+  }
+  .checkin-btn.jorbaen{ background:var(--jorbaen); }
+  .checkin-btn.sunny{ background:var(--sunny); }
+
+  .big-icon-wrap{ width:130px; height:130px; margin:14px auto 2px; }
+  .big-icon-wrap svg{ width:100%; height:100%; display:block; }
+  @media (prefers-reduced-motion: no-preference){ .big-icon-wrap{ animation:statuspop .45s ease-out; } }
+  @keyframes statuspop{ 0%{ transform:scale(.6); opacity:0; } 65%{ transform:scale(1.12); opacity:1; } 100%{ transform:scale(1); } }
+  .status-display-sm{ text-align:center; font-family:'Mali', cursive; font-weight:600; font-size:15px; color:var(--ink-soft); margin:2px 0 8px; }
+
+  @media (prefers-reduced-motion: no-preference){
+    .steam-path{ animation:steamRise 1.8s ease-in-out infinite; }
+    .laptop-glow{ animation:glowPulse 1.6s ease-in-out infinite; }
+    .ctrl-wiggle{ animation:ctrlWiggle 1s ease-in-out infinite; transform-origin:50% 70%; }
+    .btn-blink{ animation:btnBlink 1.2s ease-in-out infinite; }
+    .book-rock{ animation:bookRock 2.2s ease-in-out infinite; transform-origin:50% 95%; }
+  }
+  @keyframes steamRise{ 0%{ transform:translateY(0); opacity:.15; } 50%{ opacity:.85; } 100%{ transform:translateY(-10px); opacity:0; } }
+  @keyframes glowPulse{ 0%,100%{ opacity:.55; } 50%{ opacity:1; } }
+  @keyframes ctrlWiggle{ 0%,100%{ transform:rotate(-3deg); } 50%{ transform:rotate(3deg); } }
+  @keyframes btnBlink{ 0%,100%{ opacity:1; } 50%{ opacity:.3; } }
+  @keyframes bookRock{ 0%,100%{ transform:rotate(-2deg); } 50%{ transform:rotate(2deg); } }
+
+  .status-select{
+    display:block; margin:4px auto 0; font-family:'Sarabun'; font-size:13px; padding:7px 10px;
+    border-radius:10px; border:1.5px solid var(--paper-shadow); background:var(--paper-card);
+    color:var(--ink); max-width:220px; width:100%;
+  }
+
+  .note-input-row{ display:flex; gap:6px; margin:8px 0 14px; }
+  .note-input-row input{
+    flex:1; font-family:'Sarabun'; font-size:13px; padding:7px 10px;
+    border:1.5px solid var(--paper-shadow); border-radius:8px; background:var(--paper-card); color:var(--ink);
+  }
+  .note-input-row button{
+    font-family:'Sarabun'; font-size:12.5px; font-weight:600; padding:7px 12px;
+    border-radius:8px; border:none; cursor:pointer; color:#fff;
+  }
+
+  .sticky-box{
+    background:var(--paper-shadow); border-radius:5px; padding:10px 12px;
+    margin-top:10px; transform:rotate(-0.6deg);
+  }
+  .sticky-text{ font-family:'Mali', cursive; font-size:15px; line-height:1.4; margin:0; }
+  .sticky-time{ font-size:10.5px; color:var(--ink-soft); margin-top:4px; }
+
+  .diary-cal-row{ display:flex; justify-content:center; margin:8px 0 26px; }
+  .diary-cal-btn{
+    display:flex; flex-direction:column; align-items:center; gap:2px;
+    background:var(--paper-card); border:2px solid var(--paper-shadow); border-radius:18px;
+    padding:14px 30px; cursor:pointer; font-family:'Sarabun'; font-weight:600; font-size:12.5px; color:var(--ink);
+    box-shadow:0 8px 16px -6px rgba(0,0,0,0.18);
+  }
+  .diary-cal-btn .icon{ font-size:34px; line-height:1; }
+
+  footer{ text-align:center; }
+  .switch-link{
+    background:none; border:none; font-family:'Sarabun'; font-size:12px;
+    color:var(--ink-soft); text-decoration:underline; cursor:pointer; padding:0;
+  }
+  .sync-line{ font-size:11px; color:var(--ink-soft); margin-top:10px; }
+  :focus-visible{ outline:2px solid var(--ink); outline-offset:2px; }
+  .hidden{ display:none !important; }
+
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,0.45);
+    display:flex; align-items:center; justify-content:center; padding:20px; z-index:50;
+  }
+  .modal-overlay[hidden]{ display:none; }
+  .modal{
+    background:var(--paper-card); border-radius:18px; border:1.5px solid var(--paper-shadow);
+    padding:20px 18px 18px; width:100%; max-width:360px; max-height:85vh; overflow-y:auto;
+    box-shadow:0 30px 60px -20px rgba(0,0,0,0.4);
+  }
+  .modal-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  .nav-btn{
+    background:var(--paper); border:1.5px solid var(--paper-shadow); border-radius:50%;
+    width:30px; height:30px; font-size:16px; color:var(--ink); cursor:pointer; line-height:1;
+  }
+  .modal-title{ font-family:'Mali', cursive; font-weight:700; font-size:16px; }
+  .cal-weekdays{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:6px; }
+  .cal-weekdays span{ text-align:center; font-size:10px; color:var(--ink-soft); }
+  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+  .cal-day{
+    all:unset; box-sizing:border-box; display:flex; align-items:center; justify-content:center;
+    aspect-ratio:1; border-radius:8px; font-size:12px; font-family:'Sarabun'; cursor:pointer;
+    position:relative; color:var(--ink); background:var(--paper);
+  }
+  .cal-blank{ visibility:hidden; }
+  .cal-day.has-data::after{
+    content:""; position:absolute; bottom:4px; width:5px; height:5px; border-radius:50%; background:var(--sunny);
+  }
+  .cal-day.selected{ box-shadow:0 0 0 2px var(--jorbaen); }
+  .cal-detail{ margin-top:14px; font-size:12.5px; line-height:1.6; min-height:20px; }
+  .cal-detail .d-head{ font-family:'Mali', cursive; font-weight:700; font-size:15px; margin-bottom:8px; }
+  .diary-textarea{
+    width:100%; font-family:'Sarabun'; font-size:13px; padding:9px 10px;
+    border:1.5px solid var(--paper-shadow); border-radius:8px; background:var(--paper);
+    color:var(--ink); resize:vertical; min-height:58px;
+  }
+  .modal-close{
+    display:block; margin:14px auto 0; background:var(--paper); border:1.5px solid var(--paper-shadow);
+    border-radius:16px; padding:6px 22px; font-family:'Sarabun'; font-weight:500; font-size:12.5px;
+    color:var(--ink); cursor:pointer;
+  }
+
+  @media (max-width:380px){ .note-card{ padding:24px 14px 16px; } }
+</style>
+</head>
+<body>
+
+<div class="sky-day" aria-hidden="true">
+  <span class="sun-icon">☀️</span>
+  <span class="cloud c1">☁️</span>
+  <span class="cloud c2">☁️</span>
+  <span class="cloud c3">☁️</span>
+</div>
+<div class="sky-night" aria-hidden="true">
+  <span class="moon-icon">🌙</span>
+  <span class="star" style="top:8%; left:12%; font-size:10px; animation-delay:0s;">✦</span>
+  <span class="star" style="top:14%; left:30%; font-size:7px; animation-delay:.6s;">✦</span>
+  <span class="star" style="top:6%; left:55%; font-size:9px; animation-delay:1.1s;">✦</span>
+  <span class="star" style="top:20%; left:75%; font-size:8px; animation-delay:.3s;">✦</span>
+  <span class="star" style="top:10%; left:88%; font-size:6px; animation-delay:1.6s;">✦</span>
+  <span class="star" style="top:28%; left:18%; font-size:6px; animation-delay:.9s;">✦</span>
+  <span class="star" style="top:34%; left:60%; font-size:8px; animation-delay:.2s;">✦</span>
+  <span class="star" style="top:4%; left:40%; font-size:7px; animation-delay:1.3s;">✦</span>
+</div>
+
+<div id="identityGate">
+  <div class="gate-card">
+    <p class="gate-eyebrow">ก่อนเริ่ม บอกหน่อยว่าใครถือมือถือเครื่องนี้</p>
+    <h1 class="gate-title">คุณคือใคร?</h1>
+    <div class="gate-buttons">
+      <button class="gate-btn jorbaen" data-name="จอแบน">จอแบน</button>
+      <button class="gate-btn sunny" data-name="ซันนี่">ซันนี่</button>
+    </div>
+  </div>
+</div>
+
+<div id="mainApp" class="wrap hidden">
+  <header>
+    <h1 class="app-title">จอแบน 🤍 ซันนี่</h1>
+    <p class="date-line" id="dateLine">—</p>
+    <div class="time-chip" id="timeLine">00:00:00</div>
+  </header>
+
+  <div class="anniv-banner" id="annivBanner">
+    <div class="anniv-stat">
+      <div class="anniv-num" id="daysTogetherNum">0</div>
+      <div class="anniv-lbl">วันที่คบกัน</div>
+    </div>
+    <div class="anniv-divider">💞</div>
+    <div class="anniv-stat">
+      <div class="anniv-num" id="annivCountdownNum">0</div>
+      <div class="anniv-lbl" id="annivCountdownLbl">วันจะครบรอบ</div>
+    </div>
+  </div>
+
+  <div class="cards-row" id="cardsRow"></div>
+
+  <div class="diary-cal-row">
+    <button class="diary-cal-btn" id="calOpenBtn">
+      <span class="icon">📔</span>
+      <span>ไดอารี่ & ปฎิทิน</span>
+    </button>
+  </div>
+
+  <footer>
+    <button class="switch-link" id="switchIdentity">ไม่ใช่ฉัน? เปลี่ยนตัวตน</button>
+    <p class="sync-line" id="syncStatus">กำลังเชื่อมต่อ…</p>
+  </footer>
+</div>
+
+<div class="modal-overlay" id="modalOverlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-label="ไดอารี่และปฎิทินตื่น-นอน">
+    <div class="modal-header">
+      <button class="nav-btn" id="prevMonth" aria-label="เดือนก่อนหน้า">‹</button>
+      <span class="modal-title" id="calTitle">—</span>
+      <button class="nav-btn" id="nextMonth" aria-label="เดือนถัดไป">›</button>
+    </div>
+    <div class="cal-weekdays">
+      <span>อา</span><span>จ</span><span>อ</span><span>พ</span><span>พฤ</span><span>ศ</span><span>ส</span>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div class="cal-detail" id="calDetail"></div>
+    <button class="modal-close" id="modalClose">ปิด</button>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+(function(){
+  var PEOPLE = ['จอแบน', 'ซันนี่'];
+  var ACCENT = { 'จอแบน': 'jorbaen', 'ซันนี่': 'sunny' };
+  var STATUS_PRESETS = ['กินข้าว','ทำงาน','เล่นเกม','อ่านหนังสือ'];
+  var ID_KEY = 'jsboard_whoami';
+  var ANNIV_DATE = new Date(2023, 1, 8); // 8 กุมภาพันธ์ 2566
+
+  // *** แก้ค่าด้านล่างนี้เป็น config จาก Firebase ของคุณ ***
+  var firebaseConfig = {
+    apiKey: "ใส่ของคุณที่นี่",
+    authDomain: "ใส่ของคุณที่นี่",
+    databaseURL: "ใส่ของคุณที่นี่",
+    projectId: "ใส่ของคุณที่นี่",
+    storageBucket: "ใส่ของคุณที่นี่",
+    messagingSenderId: "ใส่ของคุณที่นี่",
+    appId: "ใส่ของคุณที่นี่"
+  };
+
+  var els = {
+    gate: document.getElementById('identityGate'),
+    main: document.getElementById('mainApp'),
+    cardsRow: document.getElementById('cardsRow'),
+    dateLine: document.getElementById('dateLine'),
+    timeLine: document.getElementById('timeLine'),
+    switchBtn: document.getElementById('switchIdentity'),
+    syncStatus: document.getElementById('syncStatus'),
+    calOpenBtn: document.getElementById('calOpenBtn'),
+    modalOverlay: document.getElementById('modalOverlay'),
+    modalClose: document.getElementById('modalClose'),
+    prevMonth: document.getElementById('prevMonth'),
+    nextMonth: document.getElementById('nextMonth'),
+    calTitle: document.getElementById('calTitle'),
+    calGrid: document.getElementById('calGrid'),
+    calDetail: document.getElementById('calDetail')
+  };
+
+  function pad(n){ return String(n).padStart(2,'0'); }
+  function isoDateOf(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+  function todayISO(){ return isoDateOf(new Date()); }
+  function timeLabel(isoStr){
+    if(!isoStr) return '';
+    var d = new Date(isoStr);
+    return pad(d.getHours())+':'+pad(d.getMinutes());
+  }
+  function resizeImageToDataUrl(file, callback){
+    var reader = new FileReader();
+    reader.onload = function(e){
+      var img = new Image();
+      img.onload = function(){
+        var size = 200;
+        var canvas = document.createElement('canvas');
+        canvas.width = size; canvas.height = size;
+        var ctx = canvas.getContext('2d');
+        var s = Math.min(img.width, img.height);
+        var sx = (img.width - s) / 2, sy = (img.height - s) / 2;
+        ctx.drawImage(img, sx, sy, s, s, 0, 0, size, size);
+        callback(canvas.toDataURL('image/jpeg', 0.72));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+  function findSleepBeforeWake(name, wakeIso){
+    if (!wakeIso) return null;
+    var hist = (statusData[name] && statusData[name].history) || {};
+    var wakeDate = new Date(wakeIso);
+    var best = null;
+    Object.keys(hist).forEach(function(d){
+      var sa = hist[d] && hist[d].sleepAt;
+      if (sa){
+        var sd = new Date(sa);
+        if (sd < wakeDate && (!best || sd > best)) best = sd;
+      }
+    });
+    return best;
+  }
+
+  var myName = localStorage.getItem(ID_KEY);
+  var statusData = {};
+  var stickyData = {};
+  var useFirebase = false;
+  var statusRef = null, stickyRef = null;
+  var customStatusOpen = false;
+  var drafts = {};
+  var calDiaryDraft = null;
+  var lastRenderedDate = todayISO();
+
+  var configIsFilled = firebaseConfig.apiKey && firebaseConfig.apiKey.indexOf('ใส่ของคุณ') === -1;
+  if (configIsFilled){
+    try{
+      firebase.initializeApp(firebaseConfig);
+      statusRef = firebase.database().ref('status');
+      stickyRef = firebase.database().ref('sticky');
+      useFirebase = true;
+      els.syncStatus.textContent = '☁️ เชื่อมคลาวด์แล้ว ข้อมูลซิงค์กับทุกเครื่อง';
+      statusRef.on('value', function(snap){
+        statusData = snap.val() || {};
+        render();
+        if (!els.modalOverlay.hidden){ renderCalendar(); renderCalDetail(); }
+      });
+      stickyRef.on('value', function(snap){ stickyData = snap.val() || {}; render(); },
+        function(){ els.syncStatus.textContent = '⚠️ เชื่อมคลาวด์ไม่สำเร็จ'; });
+    } catch(e){
+      els.syncStatus.textContent = '⚠️ ตั้งค่าคลาวด์ไม่ถูกต้อง';
+    }
+  } else {
+    els.syncStatus.textContent = '📴 ยังไม่ตั้งค่าคลาวด์ (โหมดทดสอบในเครื่องนี้)';
+  }
+
+  function writeStatus(name, patch){
+    var current = statusData[name] || {};
+    var merged = Object.assign({}, current, patch);
+    statusData = Object.assign({}, statusData);
+    statusData[name] = merged;
+    if (useFirebase) statusRef.child(name).update(patch);
+    render();
+  }
+  function writeSticky(name, text){
+    var entry = { text: text, time: new Date().toISOString() };
+    stickyData = Object.assign({}, stickyData);
+    stickyData[name] = entry;
+    if (useFirebase) stickyRef.child(name).set(entry);
+    render();
+  }
+  function recordHistory(name, field){
+    var today = todayISO();
+    var current = statusData[name] || {};
+    var hist = Object.assign({}, current.history);
+    var dayObj = Object.assign({}, hist[today]);
+    dayObj[field] = new Date().toISOString();
+    hist[today] = dayObj;
+    statusData = Object.assign({}, statusData);
+    statusData[name] = Object.assign({}, current, { history: hist });
+    if (useFirebase) statusRef.child(name).child('history').child(today).child(field).set(dayObj[field]);
+    render();
+  }
+  function writeDiary(name, dateIso, text){
+    var current = statusData[name] || {};
+    var diary = Object.assign({}, current.diary);
+    diary[dateIso] = text;
+    statusData = Object.assign({}, statusData);
+    statusData[name] = Object.assign({}, current, { diary: diary });
+    if (useFirebase) statusRef.child(name).child('diary').child(dateIso).set(text);
+    render();
+  }
+
+  function buildCard(name){
+    var accent = ACCENT[name];
+    var isMe = name === myName;
+    var s = statusData[name] || {};
+    var sticky = stickyData[name] || {};
+    var today = todayISO();
+    var todayHist = (s.history && s.history[today]) || {};
+    var wokeToday = !!todayHist.wakeAt;
+    var sleepToday = !!todayHist.sleepAt;
+
+    var card = document.createElement('div');
+    card.className = 'note-card ' + (accent === 'jorbaen' ? 'tilt-l' : 'tilt-r');
+
+    var tape = document.createElement('div'); tape.className = 'tape';
+    card.appendChild(tape);
+
+    var topRow = document.createElement('div'); topRow.className = 'top-row';
+    var avatarWrap = document.createElement('div');
+    avatarWrap.className = 'avatar-wrap' + (isMe ? ' editable' : '');
+    var avatarGlow = document.createElement('div'); avatarGlow.className = 'avatar-glow';
+    if (wokeToday && !sleepToday){
+      avatarGlow.classList.add('spin');
+      avatarGlow.style.background = 'conic-gradient(from 0deg, var(--' + accent + '), transparent 35%, var(--' + accent + ') 70%, transparent 100%)';
+    }
+    avatarWrap.appendChild(avatarGlow);
+    var avatarRing = document.createElement('div'); avatarRing.className = 'avatar-ring';
+    if (s.photo){
+      var img = document.createElement('img'); img.src = s.photo; img.alt = name;
+      avatarRing.appendChild(img);
+    } else {
+      var ph = document.createElement('div'); ph.className = 'avatar-placeholder';
+      ph.style.background = 'var(--' + accent + ')';
+      ph.textContent = name.charAt(0);
+      avatarRing.appendChild(ph);
+    }
+    avatarWrap.appendChild(avatarRing);
+    if (wokeToday || sleepToday){
+      var badge = document.createElement('div'); badge.className = 'avatar-badge';
+      badge.textContent = sleepToday ? '🌙' : '☀️';
+      avatarWrap.appendChild(badge);
+    }
+    if (isMe){
+      var photoInput = document.createElement('input');
+      photoInput.type = 'file'; photoInput.accept = 'image/*'; photoInput.className = 'hidden';
+      photoInput.addEventListener('change', function(e){
+        var file = e.target.files && e.target.files[0];
+        if (!file) return;
+        resizeImageToDataUrl(file, function(dataUrl){ writeStatus(myName, { photo: dataUrl }); });
+      });
+      avatarWrap.appendChild(photoInput);
+      avatarWrap.addEventListener('click', function(){ photoInput.click(); });
+    }
+    topRow.appendChild(avatarWrap);
+
+    var mascotWrap = document.createElement('div'); mascotWrap.className = 'mascot';
+    mascotWrap.innerHTML = accent === 'jorbaen' ? MASCOT_DEER : MASCOT_BEAR;
+    topRow.appendChild(mascotWrap);
+    card.appendChild(topRow);
+
+    var nameTag = document.createElement('h2'); nameTag.className = 'name-tag ' + accent;
+    nameTag.textContent = name + (isMe ? ' (ฉัน)' : '');
+    card.appendChild(nameTag);
+
+    if (isMe){
+      var editHint = document.createElement('p'); editHint.className = 'avatar-edit-hint';
+      editHint.textContent = 'แตะรูปเพื่อเปลี่ยน';
+      card.appendChild(editHint);
+    }
+
+    var wakeLine = document.createElement('div'); wakeLine.className = 'status-line';
+    wakeLine.innerHTML = '<span class="lbl">☀️ ตื่น</span><span class="val">' +
+      (wokeToday ? timeLabel(todayHist.wakeAt) + ' น.' : 'ยังไม่ตื่นวันนี้') + '</span>';
+    card.appendChild(wakeLine);
+
+    var sleepLine = document.createElement('div'); sleepLine.className = 'status-line';
+    sleepLine.innerHTML = '<span class="lbl">🌙 นอน</span><span class="val">' +
+      (sleepToday ? timeLabel(todayHist.sleepAt) + ' น.' : 'ยังไม่นอน') + '</span>';
+    card.appendChild(sleepLine);
+
+    var sleepBefore = findSleepBeforeWake(name, todayHist.wakeAt);
+    if (wokeToday && sleepBefore){
+      var diffMin = Math.round((new Date(todayHist.wakeAt) - sleepBefore) / 60000);
+      if (diffMin > 0 && diffMin < 24*60){
+        var h = Math.floor(diffMin/60), m = diffMin % 60;
+        var durEl = document.createElement('div'); durEl.className = 'sleep-dur';
+        durEl.textContent = 'คืนนี้นอนไป ' + h + ' ชม ' + m + ' นาที';
+        card.appendChild(durEl);
+      }
+    }
+
+    if (isMe){
+      if (!wokeToday){
+        var wakeBtn = document.createElement('button'); wakeBtn.className = 'checkin-btn ' + accent;
+        wakeBtn.textContent = '☀️ ตื่นแล้ว!';
+        wakeBtn.addEventListener('click', function(){ recordHistory(myName, 'wakeAt'); });
+        card.appendChild(wakeBtn);
+      }
+      if (!sleepToday){
+        var sleepBtn = document.createElement('button'); sleepBtn.className = 'checkin-btn ' + accent;
+        sleepBtn.textContent = '🌙 ไปนอนแล้ว';
+        sleepBtn.addEventListener('click', function(){ recordHistory(myName, 'sleepAt'); });
+        card.appendChild(sleepBtn);
+      }
+    }
+
+    var iconSvg = (s.currentStatus && ACTIVITY_ICONS[s.currentStatus]) ? ACTIVITY_ICONS[s.currentStatus] : MASCOT_BEAR;
+    var bigIconWrap = document.createElement('div'); bigIconWrap.className = 'big-icon-wrap';
+    bigIconWrap.innerHTML = iconSvg;
+    card.appendChild(bigIconWrap);
+
+    var statusLabel = document.createElement('p'); statusLabel.className = 'status-display-sm';
+    statusLabel.textContent = s.currentStatus ? s.currentStatus : 'ยังไม่ระบุ';
+    card.appendChild(statusLabel);
+
+    if (isMe){
+      var isCustom = s.currentStatus && STATUS_PRESETS.indexOf(s.currentStatus) === -1;
+      var showCustomInput = customStatusOpen || isCustom;
+
+      var statusSelect = document.createElement('select'); statusSelect.className = 'status-select';
+      var placeholderOpt = document.createElement('option');
+      placeholderOpt.value = ''; placeholderOpt.textContent = 'เลือกสถานะ...'; placeholderOpt.disabled = true;
+      statusSelect.appendChild(placeholderOpt);
+      STATUS_PRESETS.forEach(function(opt){
+        var o = document.createElement('option'); o.value = opt; o.textContent = opt;
+        statusSelect.appendChild(o);
+      });
+      var otherOpt = document.createElement('option'); otherOpt.value = 'อื่นๆ'; otherOpt.textContent = 'อื่นๆ (พิมพ์เอง)';
+      statusSelect.appendChild(otherOpt);
+
+      if (showCustomInput) statusSelect.value = 'อื่นๆ';
+      else if (s.currentStatus && STATUS_PRESETS.indexOf(s.currentStatus) !== -1) statusSelect.value = s.currentStatus;
+      else statusSelect.value = '';
+
+      statusSelect.addEventListener('change', function(){
+        if (statusSelect.value === 'อื่นๆ'){ customStatusOpen = true; render(); return; }
+        customStatusOpen = false;
+        writeStatus(myName, { currentStatus: statusSelect.value, currentStatusAt: new Date().toISOString() });
+      });
+      card.appendChild(statusSelect);
+
+      if (showCustomInput){
+        var customRow = document.createElement('div'); customRow.className = 'note-input-row';
+        var customInput = document.createElement('input'); customInput.id = 'customStatusInput';
+        customInput.placeholder = 'พิมพ์ว่ากำลังทำอะไร…';
+        customInput.value = drafts.customStatusInput !== undefined ? drafts.customStatusInput : (isCustom ? s.currentStatus : '');
+        var customSend = document.createElement('button'); customSend.textContent = 'ตั้งสถานะ';
+        customSend.style.background = 'var(--' + accent + ')';
+        customSend.addEventListener('click', function(){
+          if (customInput.value.trim()){
+            writeStatus(myName, { currentStatus: customInput.value.trim(), currentStatusAt: new Date().toISOString() });
+            customStatusOpen = false;
+          }
+        });
+        customRow.appendChild(customInput); customRow.appendChild(customSend);
+        card.appendChild(customRow);
+      }
+    }
+
+    var stickyBox = document.createElement('div'); stickyBox.className = 'sticky-box';
+    var stickyText = document.createElement('p'); stickyText.className = 'sticky-text';
+    stickyText.textContent = sticky.text ? '"' + sticky.text + '"' : 'ยังไม่มีข้อความฝากไว้';
+    var stickyTime = document.createElement('div'); stickyTime.className = 'sticky-time';
+    stickyTime.textContent = sticky.time ? timeLabel(sticky.time) + ' น.' : '';
+    stickyBox.appendChild(stickyText); stickyBox.appendChild(stickyTime);
+    card.appendChild(stickyBox);
+
+    if (isMe){
+      var stickyRow = document.createElement('div'); stickyRow.className = 'note-input-row';
+      var stickyInput = document.createElement('input'); stickyInput.id = 'stickyInput';
+      stickyInput.placeholder = 'ฝากข้อความถึงอีกฝ่าย…';
+      stickyInput.value = drafts.stickyInput !== undefined ? drafts.stickyInput : '';
+      var stickySend = document.createElement('button');
+      stickySend.textContent = 'ฝาก'; stickySend.style.background = 'var(--' + accent + ')';
+      stickySend.addEventListener('click', function(){
+        if (stickyInput.value.trim()){ writeSticky(myName, stickyInput.value.trim()); stickyInput.value=''; }
+      });
+      stickyRow.appendChild(stickyInput); stickyRow.appendChild(stickySend);
+      card.appendChild(stickyRow);
+    }
+
+    return card;
+  }
+
+  function applyTheme(now){
+    var h = now.getHours();
+    var isDay = h >= 6 && h < 19;
+    document.body.classList.toggle('theme-day', isDay);
+    document.body.classList.toggle('theme-night', !isDay);
+  }
+
+  function updateAnniversary(now){
+    var startMid = new Date(ANNIV_DATE); startMid.setHours(0,0,0,0);
+    var todayMid = new Date(now); todayMid.setHours(0,0,0,0);
+    var daysTogether = Math.floor((todayMid - startMid) / 86400000) + 1;
+    document.getElementById('daysTogetherNum').textContent = daysTogether;
+
+    var y = todayMid.getFullYear();
+    var nextAnniv = new Date(y, 1, 8); nextAnniv.setHours(0,0,0,0);
+    if (nextAnniv < todayMid){ nextAnniv = new Date(y+1, 1, 8); nextAnniv.setHours(0,0,0,0); }
+    var daysLeft = Math.round((nextAnniv - todayMid) / 86400000);
+    var annivYears = nextAnniv.getFullYear() - ANNIV_DATE.getFullYear();
+    var numEl = document.getElementById('annivCountdownNum');
+    var lblEl = document.getElementById('annivCountdownLbl');
+    if (daysLeft === 0){
+      numEl.textContent = '🎉';
+      lblEl.textContent = 'ครบรอบ ' + annivYears + ' ปีวันนี้!';
+    } else {
+      numEl.textContent = daysLeft;
+      lblEl.textContent = 'วันจะครบรอบ ' + annivYears + ' ปี';
+    }
+  }
+
+  function updateClock(){
+    var now = new Date();
+    applyTheme(now);
+    els.dateLine.textContent = now.toLocaleDateString('th-TH', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    els.timeLine.textContent = pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds());
+    updateAnniversary(now);
+    var t = isoDateOf(now);
+    if (t !== lastRenderedDate){ lastRenderedDate = t; render(); }
+  }
+
+  function render(){
+    if (!myName) return;
+    ['stickyInput','customStatusInput'].forEach(function(id){
+      var el = document.getElementById(id);
+      if (el) drafts[id] = el.value;
+    });
+    els.cardsRow.innerHTML = '';
+    PEOPLE.forEach(function(name){ els.cardsRow.appendChild(buildCard(name)); });
+  }
+
+  function showMain(){ els.gate.classList.add('hidden'); els.main.classList.remove('hidden'); render(); }
+  function showGate(){ els.main.classList.add('hidden'); els.gate.classList.remove('hidden'); }
+
+  document.querySelectorAll('.gate-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      myName = btn.getAttribute('data-name');
+      localStorage.setItem(ID_KEY, myName);
+      showMain();
+    });
+  });
+  els.switchBtn.addEventListener('click', function(){
+    localStorage.removeItem(ID_KEY); myName = null; showGate();
+  });
+
+  /* ---------- calendar + diary ---------- */
+  var calYear, calMonth, selectedDateIso = null;
+  function dayHasData(iso){
+    return PEOPLE.some(function(n){
+      var st = statusData[n] || {};
+      var h = st.history && st.history[iso];
+      var hasHist = h && (h.wakeAt || h.sleepAt);
+      var hasDiary = st.diary && st.diary[iso];
+      return hasHist || hasDiary;
+    });
+  }
+  function openCalendar(){
+    var now = new Date(); calYear = now.getFullYear(); calMonth = now.getMonth();
+    selectedDateIso = todayISO();
+    renderCalendar(); renderCalDetail();
+    els.modalOverlay.hidden = false;
+  }
+  function closeCalendar(){ els.modalOverlay.hidden = true; }
+  function renderCalendar(){
+    var first = new Date(calYear, calMonth, 1);
+    els.calTitle.textContent = first.toLocaleDateString('th-TH', { month:'long', year:'numeric' });
+    els.calGrid.innerHTML = '';
+    var startOffset = first.getDay();
+    var daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+    for (var b=0; b<startOffset; b++){ var bl=document.createElement('span'); bl.className='cal-blank'; els.calGrid.appendChild(bl); }
+    for (var day=1; day<=daysInMonth; day++){
+      var date = new Date(calYear, calMonth, day);
+      var iso = isoDateOf(date);
+      var btn = document.createElement('button'); btn.type='button'; btn.className='cal-day'; btn.textContent=day;
+      if (dayHasData(iso)) btn.classList.add('has-data');
+      if (iso === selectedDateIso) btn.classList.add('selected');
+      btn.addEventListener('click', function(dIso){ return function(){
+        selectedDateIso = dIso; calDiaryDraft = null; renderCalendar(); renderCalDetail();
+      }; }(iso));
+      els.calGrid.appendChild(btn);
+    }
+  }
+  function renderCalDetail(){
+    var existingTextarea = document.getElementById('calDiaryInput');
+    if (existingTextarea) calDiaryDraft = existingTextarea.value;
+    els.calDetail.innerHTML = '';
+    if (!selectedDateIso) return;
+    var dateObj = new Date(selectedDateIso);
+    var head = document.createElement('div'); head.className='d-head';
+    head.textContent = dateObj.toLocaleDateString('th-TH', { day:'numeric', month:'long', year:'numeric' });
+    els.calDetail.appendChild(head);
+
+    PEOPLE.forEach(function(name){
+      var st = statusData[name] || {};
+      var h = (st.history && st.history[selectedDateIso]) || {};
+      var line = document.createElement('div'); line.style.marginBottom = '3px';
+      line.textContent = name + ': ตื่น ' + (h.wakeAt ? timeLabel(h.wakeAt)+' น.' : 'ไม่มีข้อมูล') +
+        ' · นอน ' + (h.sleepAt ? timeLabel(h.sleepAt)+' น.' : 'ไม่มีข้อมูล');
+      els.calDetail.appendChild(line);
+
+      var diaryVal = (st.diary && st.diary[selectedDateIso]) || '';
+      if (name === myName){
+        var dWrap = document.createElement('div'); dWrap.style.margin = '4px 0 14px';
+        var dTextarea = document.createElement('textarea'); dTextarea.id = 'calDiaryInput'; dTextarea.className = 'diary-textarea';
+        dTextarea.placeholder = 'เขียนไดอารี่วันนี้...';
+        dTextarea.value = calDiaryDraft !== null ? calDiaryDraft : diaryVal;
+        var dSaveBtn = document.createElement('button'); dSaveBtn.className = 'checkin-btn ' + ACCENT[myName];
+        dSaveBtn.textContent = 'บันทึกไดอารี่'; dSaveBtn.style.marginTop = '6px';
+        dSaveBtn.addEventListener('click', function(){
+          writeDiary(myName, selectedDateIso, dTextarea.value);
+          calDiaryDraft = null;
+          renderCalendar(); renderCalDetail();
+        });
+        dWrap.appendChild(dTextarea); dWrap.appendChild(dSaveBtn);
+        els.calDetail.appendChild(dWrap);
+      } else {
+        var dline = document.createElement('div'); dline.style.marginBottom = '12px'; dline.style.fontStyle = 'italic';
+        dline.textContent = '📔 ' + (diaryVal ? '"' + diaryVal + '"' : 'ยังไม่ได้เขียนวันนี้');
+        els.calDetail.appendChild(dline);
+      }
+    });
+  }
+  els.calOpenBtn.addEventListener('click', openCalendar);
+  els.modalClose.addEventListener('click', closeCalendar);
+  els.modalOverlay.addEventListener('click', function(e){ if (e.target === els.modalOverlay) closeCalendar(); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !els.modalOverlay.hidden) closeCalendar(); });
+  els.prevMonth.addEventListener('click', function(){ calMonth--; if (calMonth<0){calMonth=11; calYear--;} renderCalendar(); });
+  els.nextMonth.addEventListener('click', function(){ calMonth++; if (calMonth>11){calMonth=0; calYear++;} renderCalendar(); });
+
+  var MASCOT_DEER = '<svg viewBox="0 0 70 84" width="58" height="70" class="mascot-anim">' +
+    '<path d="M6,80 Q8,68 5,60" stroke="#7FA66B" stroke-width="3" fill="none" stroke-linecap="round"/>' +
+    '<path d="M14,80 Q17,70 13,62" stroke="#8FB87A" stroke-width="3" fill="none" stroke-linecap="round"/>' +
+    '<path d="M56,80 Q58,70 55,61" stroke="#7FA66B" stroke-width="3" fill="none" stroke-linecap="round"/>' +
+    '<path d="M62,80 Q65,69 61,60" stroke="#8FB87A" stroke-width="3" fill="none" stroke-linecap="round"/>' +
+    '<rect x="24" y="60" width="6" height="16" rx="3" fill="#A9784A"/>' +
+    '<rect x="40" y="60" width="6" height="16" rx="3" fill="#A9784A"/>' +
+    '<ellipse cx="35" cy="52" rx="17" ry="14" fill="#C99B6E"/>' +
+    '<rect x="24" y="44" width="22" height="5" rx="2.5" fill="#6E8B74"/>' +
+    '<circle cx="35" cy="28" r="13" fill="#C99B6E"/>' +
+    '<ellipse cx="24" cy="22" rx="4.5" ry="7" fill="#C99B6E" transform="rotate(-25 24 22)"/>' +
+    '<ellipse cx="46" cy="22" rx="4.5" ry="7" fill="#C99B6E" transform="rotate(25 46 22)"/>' +
+    '<path d="M28,17 L24,8 M24,8 L20,10 M24,8 L27,11" stroke="#8A6240" stroke-width="2" fill="none" stroke-linecap="round"/>' +
+    '<path d="M42,17 L46,8 M46,8 L50,10 M46,8 L43,11" stroke="#8A6240" stroke-width="2" fill="none" stroke-linecap="round"/>' +
+    '<circle cx="30" cy="27" r="2" fill="#4A3F35"/><circle cx="40" cy="27" r="2" fill="#4A3F35"/>' +
+    '<ellipse cx="35" cy="34" rx="3.5" ry="2.6" fill="#6B4A36"/></svg>';
+
+  var MASCOT_BEAR = '<svg viewBox="0 0 70 84" width="58" height="70" class="mascot-anim">' +
+    '<rect x="24" y="64" width="7" height="14" rx="3.5" fill="#FFFFFF" stroke="#D8CFC2" stroke-width="1.5"/>' +
+    '<rect x="39" y="64" width="7" height="14" rx="3.5" fill="#FFFFFF" stroke="#D8CFC2" stroke-width="1.5"/>' +
+    '<rect x="14" y="44" width="7" height="18" rx="3.5" fill="#FFFFFF" stroke="#D8CFC2" stroke-width="1.5" transform="rotate(-30 17 44)"/>' +
+    '<rect x="49" y="44" width="7" height="18" rx="3.5" fill="#FFFFFF" stroke="#D8CFC2" stroke-width="1.5" transform="rotate(30 53 44)"/>' +
+    '<defs><clipPath id="bclip"><ellipse cx="35" cy="52" rx="16" ry="15"/></clipPath></defs>' +
+    '<ellipse cx="35" cy="52" rx="16" ry="15" fill="#FFFFFF" stroke="#D8CFC2" stroke-width="1.5"/>' +
+    '<g clip-path="url(#bclip)"><rect x="18" y="44" width="34" height="5" fill="#C7D2D6"/><rect x="18" y="54" width="34" height="5" fill="#C7D2D6"/></g>' +
+    '<rect x="25" y="40" width="20" height="4.5" rx="2.2" fill="#C98A2B"/>' +
+    '<circle cx="35" cy="26" r="13" fill="#FFFFFF" stroke="#D8CFC2" stroke-width="1.5"/>' +
+    '<circle cx="24" cy="16" r="5" fill="#FFFFFF" stroke="#D8CFC2" stroke-width="1.5"/>' +
+    '<circle cx="46" cy="16" r="5" fill="#FFFFFF" stroke="#D8CFC2" stroke-width="1.5"/>' +
+    '<circle cx="30" cy="25" r="2" fill="#4A3F35"/><circle cx="40" cy="25" r="2" fill="#4A3F35"/>' +
+    '<ellipse cx="35" cy="31" rx="3.4" ry="2.6" fill="#4A3F35"/>' +
+    '<path d="M30,34 Q35,37 40,34" stroke="#4A3F35" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>';
+
+  var ICON_EAT = '<svg viewBox="0 0 120 120">' +
+    '<path d="M24,78 Q24,50 60,50 Q96,50 96,78" fill="#F2D9A8" stroke="#2B2420" stroke-width="4"/>' +
+    '<ellipse cx="60" cy="78" rx="38" ry="13" fill="#fff" stroke="#2B2420" stroke-width="4"/>' +
+    '<path d="M30,76 Q60,86 90,76" fill="none" stroke="#2B2420" stroke-width="3"/>' +
+    '<line x1="70" y1="40" x2="92" y2="10" stroke="#2B2420" stroke-width="4" stroke-linecap="round"/>' +
+    '<line x1="78" y1="46" x2="100" y2="16" stroke="#2B2420" stroke-width="4" stroke-linecap="round"/>' +
+    '<path class="steam-path" d="M48,44 Q44,34 50,26" fill="none" stroke="#9CCBE0" stroke-width="3" stroke-linecap="round" style="animation-delay:0s"/>' +
+    '<path class="steam-path" d="M64,44 Q60,32 66,22" fill="none" stroke="#9CCBE0" stroke-width="3" stroke-linecap="round" style="animation-delay:.5s"/>' +
+    '</svg>';
+
+  var ICON_WORK = '<svg viewBox="0 0 120 120">' +
+    '<path d="M14,90 L106,90 L98,104 L22,104 Z" fill="#E8DCC4" stroke="#2B2420" stroke-width="4"/>' +
+    '<rect x="22" y="40" width="76" height="50" rx="6" fill="#F5F0E6" stroke="#2B2420" stroke-width="4"/>' +
+    '<rect x="30" y="48" width="60" height="34" rx="3" fill="#6FA8D9" stroke="#2B2420" stroke-width="3" class="laptop-glow"/>' +
+    '</svg>';
+
+  var ICON_GAME = '<svg viewBox="0 0 120 120">' +
+    '<g class="ctrl-wiggle">' +
+    '<path d="M30,48 Q18,48 16,64 L12,86 Q10,100 24,100 Q33,100 37,90 L43,80 L77,80 L83,90 Q87,100 96,100 Q110,100 108,86 L104,64 Q102,48 90,48 Z" fill="#E27272" stroke="#2B2420" stroke-width="4"/>' +
+    '<line x1="40" y1="64" x2="40" y2="76" stroke="#2B2420" stroke-width="5" stroke-linecap="round"/>' +
+    '<line x1="34" y1="70" x2="46" y2="70" stroke="#2B2420" stroke-width="5" stroke-linecap="round"/>' +
+    '<circle cx="80" cy="62" r="6" fill="#FFD966" stroke="#2B2420" stroke-width="2" class="btn-blink"/>' +
+    '<circle cx="94" cy="70" r="6" fill="#6FBE96" stroke="#2B2420" stroke-width="2"/>' +
+    '</g></svg>';
+
+  var ICON_BOOK = '<svg viewBox="0 0 120 120">' +
+    '<g class="book-rock">' +
+    '<path d="M60,40 Q30,34 16,44 L16,90 Q30,82 60,92 Z" fill="#fff" stroke="#2B2420" stroke-width="4"/>' +
+    '<path d="M60,40 Q90,34 104,44 L104,90 Q90,82 60,92 Z" fill="#fff" stroke="#2B2420" stroke-width="4"/>' +
+    '<path d="M60,40 L60,92" stroke="#2B2420" stroke-width="3"/>' +
+    '<line x1="24" y1="54" x2="50" y2="50" stroke="#C9C2B4" stroke-width="2"/>' +
+    '<line x1="24" y1="64" x2="50" y2="60" stroke="#C9C2B4" stroke-width="2"/>' +
+    '<line x1="70" y1="50" x2="96" y2="54" stroke="#C9C2B4" stroke-width="2"/>' +
+    '<line x1="70" y1="60" x2="96" y2="64" stroke="#C9C2B4" stroke-width="2"/>' +
+    '</g></svg>';
+
+  var ACTIVITY_ICONS = {
+    'กินข้าว': ICON_EAT,
+    'ทำงาน': ICON_WORK,
+    'เล่นเกม': ICON_GAME,
+    'อ่านหนังสือ': ICON_BOOK
+  };
+
+  if (myName && PEOPLE.indexOf(myName) !== -1){ showMain(); } else { showGate(); }
+  updateClock();
+  setInterval(updateClock, 1000);
+})();
+</script>
+
+</body>
+</html>
