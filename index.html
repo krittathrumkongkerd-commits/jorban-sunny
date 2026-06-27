@@ -100,9 +100,10 @@
   .cards-row{ display:flex; gap:18px; flex-wrap:wrap; justify-content:center; }
   .note-card{
     flex:1 1 280px; max-width:320px;
-    background:var(--paper-card); border-radius:6px;
+    background:var(--paper-card); color:var(--ink); border-radius:6px;
     box-shadow:0 10px 22px -6px rgba(0,0,0,0.22);
     padding:26px 18px 18px; position:relative; margin-top:18px;
+    transition:background .3s ease, color .3s ease;
   }
   .note-card.tilt-l{ transform:rotate(-1.4deg); }
   .note-card.tilt-r{ transform:rotate(1.4deg); }
@@ -158,6 +159,7 @@
   }
   .checkin-btn.jorbaen{ background:var(--jorbaen); }
   .checkin-btn.sunny{ background:var(--sunny); }
+  .checkin-btn.inactive-state{ opacity:.45; }
 
   .big-icon-wrap{ width:130px; height:130px; margin:14px auto 2px; }
   .big-icon-wrap svg{ width:100%; height:100%; display:block; }
@@ -527,16 +529,36 @@
     if (useFirebase) stickyRef.child(name).set(entry);
     render();
   }
-  function recordHistory(name, field){
+  function setSleepState(name, state){
     var today = todayISO();
     var current = statusData[name] || {};
     var hist = Object.assign({}, current.history);
-    var dayObj = Object.assign({}, hist[today]);
-    dayObj[field] = new Date().toISOString();
-    hist[today] = dayObj;
+    var todayHist = Object.assign({}, hist[today]);
+    var historyChanged = false;
+    var nowIso = new Date().toISOString();
+    var patch = { sleepState: state, sleepStateAt: nowIso };
+    if (state === 'awake'){
+      patch.lastWakeAt = nowIso;
+      if (!todayHist.wakeAt){ todayHist.wakeAt = nowIso; historyChanged = true; }
+    }
+    if (state === 'asleep'){
+      patch.lastSleepAt = nowIso;
+      if (!todayHist.sleepAt){ todayHist.sleepAt = nowIso; historyChanged = true; }
+    }
+    if (historyChanged) hist[today] = todayHist;
+
+    var merged = Object.assign({}, current, patch);
+    if (historyChanged) merged.history = hist;
     statusData = Object.assign({}, statusData);
-    statusData[name] = Object.assign({}, current, { history: hist });
-    if (useFirebase) statusRef.child(name).child('history').child(today).child(field).set(dayObj[field]);
+    statusData[name] = merged;
+
+    if (useFirebase){
+      statusRef.child(name).update(patch);
+      if (historyChanged){
+        var field = state === 'awake' ? 'wakeAt' : 'sleepAt';
+        statusRef.child(name).child('history').child(today).child(field).set(todayHist[field]);
+      }
+    }
     render();
   }
   function writeDiary(name, dateIso, text){
@@ -562,6 +584,18 @@
     var card = document.createElement('div');
     card.className = 'note-card ' + (accent === 'jorbaen' ? 'tilt-l' : 'tilt-r');
 
+    if (s.sleepState === 'awake'){
+      card.style.setProperty('--paper-card', '#F6C58D');
+      card.style.setProperty('--paper-shadow', '#ECAE63');
+      card.style.setProperty('--ink', '#4A2A06');
+      card.style.setProperty('--ink-soft', '#7C5024');
+    } else if (s.sleepState === 'asleep'){
+      card.style.setProperty('--paper-card', '#C7B3E8');
+      card.style.setProperty('--paper-shadow', '#AD92D9');
+      card.style.setProperty('--ink', '#2E2150');
+      card.style.setProperty('--ink-soft', '#564176');
+    }
+
     var tape = document.createElement('div'); tape.className = 'tape';
     card.appendChild(tape);
 
@@ -569,7 +603,7 @@
     var avatarWrap = document.createElement('div');
     avatarWrap.className = 'avatar-wrap' + (isMe ? ' editable' : '');
     var avatarGlow = document.createElement('div'); avatarGlow.className = 'avatar-glow';
-    if (wokeToday && !sleepToday){
+    if (s.sleepState === 'awake'){
       avatarGlow.classList.add('spin');
       avatarGlow.style.background = 'conic-gradient(from 0deg, var(--' + accent + '), transparent 35%, var(--' + accent + ') 70%, transparent 100%)';
     }
@@ -585,9 +619,9 @@
       avatarRing.appendChild(ph);
     }
     avatarWrap.appendChild(avatarRing);
-    if (wokeToday || sleepToday){
+    if (s.sleepState){
       var badge = document.createElement('div'); badge.className = 'avatar-badge';
-      badge.textContent = sleepToday ? '🌙' : '☀️';
+      badge.textContent = s.sleepState === 'asleep' ? '🌙' : '☀️';
       avatarWrap.appendChild(badge);
     }
     if (isMe){
@@ -618,45 +652,41 @@
       card.appendChild(editHint);
     }
 
-    if (wokeToday){
+    if (s.lastWakeAt){
       var wakeLine = document.createElement('div'); wakeLine.className = 'status-line';
-      wakeLine.innerHTML = '<span class="lbl">☀️ ตื่น</span><span class="val">' + timeLabel(todayHist.wakeAt) + ' น.</span>';
+      wakeLine.innerHTML = '<span class="lbl">☀️ ตื่น</span><span class="val">' + timeLabel(s.lastWakeAt) + ' น.</span>';
       card.appendChild(wakeLine);
     }
-
-    if (sleepToday){
+    if (s.lastSleepAt){
       var sleepLine = document.createElement('div'); sleepLine.className = 'status-line';
-      sleepLine.innerHTML = '<span class="lbl">🌙 นอน</span><span class="val">' + timeLabel(todayHist.sleepAt) + ' น.</span>';
+      sleepLine.innerHTML = '<span class="lbl">🌙 นอน</span><span class="val">' + timeLabel(s.lastSleepAt) + ' น.</span>';
       card.appendChild(sleepLine);
     }
 
-    var sleepBefore = findSleepBeforeWake(name, todayHist.wakeAt);
-    if (wokeToday && sleepBefore){
-      var diffMin = Math.round((new Date(todayHist.wakeAt) - sleepBefore) / 60000);
-      if (diffMin > 0 && diffMin < 24*60){
-        var h = Math.floor(diffMin/60), m = diffMin % 60;
-        var durEl = document.createElement('div'); durEl.className = 'sleep-dur';
-        durEl.textContent = 'คืนนี้นอนไป ' + h + ' ชม ' + m + ' นาที';
-        card.appendChild(durEl);
-      }
-    }
-
     if (isMe){
-      if (!wokeToday){
-        var wakeBtn = document.createElement('button'); wakeBtn.className = 'checkin-btn ' + accent;
-        wakeBtn.textContent = '☀️ ตื่นแล้ว!';
-        wakeBtn.addEventListener('click', function(){ recordHistory(myName, 'wakeAt'); });
-        card.appendChild(wakeBtn);
-      }
-      if (!sleepToday){
-        var sleepBtn = document.createElement('button'); sleepBtn.className = 'checkin-btn ' + accent;
-        sleepBtn.textContent = '🌙 ไปนอนแล้ว';
-        sleepBtn.addEventListener('click', function(){ recordHistory(myName, 'sleepAt'); });
-        card.appendChild(sleepBtn);
-      }
+      var wakeBtn = document.createElement('button');
+      wakeBtn.className = 'checkin-btn ' + accent + (s.sleepState === 'awake' ? '' : ' inactive-state');
+      wakeBtn.textContent = (s.sleepState === 'awake' ? '✓ ' : '') + '☀️ ตื่น';
+      wakeBtn.addEventListener('click', function(){ setSleepState(myName, 'awake'); });
+      card.appendChild(wakeBtn);
+
+      var sleepBtn = document.createElement('button');
+      sleepBtn.className = 'checkin-btn ' + accent + (s.sleepState === 'asleep' ? '' : ' inactive-state');
+      sleepBtn.textContent = (s.sleepState === 'asleep' ? '✓ ' : '') + '🌙 นอน';
+      sleepBtn.addEventListener('click', function(){ setSleepState(myName, 'asleep'); });
+      card.appendChild(sleepBtn);
     }
 
-    var iconSvg = (s.currentStatus && ACTIVITY_ICONS[s.currentStatus]) ? ACTIVITY_ICONS[s.currentStatus] : MASCOT_BEAR;
+    var iconSvg;
+    if (s.currentStatus && ACTIVITY_ICONS[s.currentStatus]){
+      iconSvg = ACTIVITY_ICONS[s.currentStatus];
+    } else if (s.sleepState === 'asleep'){
+      iconSvg = ICON_BEAR_ASLEEP;
+    } else if (s.sleepState === 'awake'){
+      iconSvg = ICON_BEAR_AWAKE;
+    } else {
+      iconSvg = MASCOT_BEAR;
+    }
     var bigIconWrap = document.createElement('div'); bigIconWrap.className = 'big-icon-wrap';
     bigIconWrap.innerHTML = iconSvg;
     card.appendChild(bigIconWrap);
@@ -763,10 +793,13 @@
     }
   }
 
+  var DAY_COLORS = ['#D8392F','#C99A1E','#D9789E','#4F9468','#D9763A','#4A8FBF','#7A5BB5'];
+
   function updateClock(){
     var now = new Date();
     applyTheme(now);
     els.dateLine.textContent = now.toLocaleDateString('th-TH', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    els.dateLine.style.color = DAY_COLORS[now.getDay()];
     els.timeLine.textContent = pad(now.getHours())+':'+pad(now.getMinutes());
     updateAnniversary(now);
     var t = isoDateOf(now);
@@ -1048,6 +1081,34 @@
     '<path d="M50,70 L20,96 L34,98 L40,86 L48,98 L60,96 Z" fill="#F2D9A8" stroke="#2B2420" stroke-width="4"/>' +
     '<path class="sparkle-twinkle" d="M86,78 L89,84 L95,87 L89,90 L86,96 L83,90 L77,87 L83,84 Z" fill="#FFD966" stroke="#2B2420" stroke-width="2"/>' +
     '<circle class="sparkle-twinkle2" cx="70" cy="92" r="4" fill="#6FBE96" stroke="#2B2420" stroke-width="1.5"/>' +
+    '</svg>';
+
+  var ICON_BEAR_AWAKE = '<svg viewBox="0 0 120 120">' +
+    '<ellipse cx="60" cy="94" rx="30" ry="7" fill="#E8DCC4" opacity=".4"/>' +
+    '<rect x="42" y="78" width="12" height="20" rx="6" fill="#fff" stroke="#2B2420" stroke-width="3"/>' +
+    '<rect x="66" y="78" width="12" height="20" rx="6" fill="#fff" stroke="#2B2420" stroke-width="3"/>' +
+    '<rect x="20" y="48" width="12" height="24" rx="6" fill="#fff" stroke="#2B2420" stroke-width="3" transform="rotate(-25 26 48)"/>' +
+    '<rect x="88" y="48" width="12" height="24" rx="6" fill="#fff" stroke="#2B2420" stroke-width="3" transform="rotate(25 94 48)"/>' +
+    '<ellipse cx="60" cy="64" rx="26" ry="24" fill="#fff" stroke="#2B2420" stroke-width="4"/>' +
+    '<circle cx="60" cy="32" r="22" fill="#fff" stroke="#2B2420" stroke-width="4"/>' +
+    '<circle cx="42" cy="14" r="8" fill="#fff" stroke="#2B2420" stroke-width="3"/>' +
+    '<circle cx="78" cy="14" r="8" fill="#fff" stroke="#2B2420" stroke-width="3"/>' +
+    '<circle cx="52" cy="30" r="3.2" fill="#2B2420"/><circle cx="68" cy="30" r="3.2" fill="#2B2420"/>' +
+    '<circle cx="53" cy="28.5" r="1" fill="#fff"/><circle cx="69" cy="28.5" r="1" fill="#fff"/>' +
+    '<ellipse cx="60" cy="38" rx="5" ry="4" fill="#2B2420"/>' +
+    '<path d="M52,43 Q60,47 68,43" stroke="#2B2420" stroke-width="1.6" fill="none" stroke-linecap="round"/>' +
+    '<path class="sparkle-twinkle" d="M100,10 L103,16 L109,19 L103,22 L100,28 L97,22 L91,19 L97,16 Z" fill="#FFD966" stroke="#2B2420" stroke-width="2"/>' +
+    '</svg>';
+
+  var ICON_BEAR_ASLEEP = '<svg viewBox="0 0 120 120">' +
+    '<ellipse cx="58" cy="80" rx="44" ry="22" fill="#fff" stroke="#2B2420" stroke-width="4"/>' +
+    '<circle cx="28" cy="72" r="20" fill="#fff" stroke="#2B2420" stroke-width="4"/>' +
+    '<circle cx="16" cy="56" r="7" fill="#fff" stroke="#2B2420" stroke-width="3"/>' +
+    '<path d="M20,70 Q25,66 30,70" stroke="#2B2420" stroke-width="2.4" fill="none" stroke-linecap="round"/>' +
+    '<ellipse cx="20" cy="78" rx="4" ry="3" fill="#2B2420"/>' +
+    '<line x1="40" y1="72" x2="100" y2="72" stroke="#C7D2D6" stroke-width="6" stroke-linecap="round"/>' +
+    '<text x="68" y="38" font-family="Mali, cursive" font-weight="700" font-size="22" fill="#8C7EB8" class="sparkle-twinkle">Z</text>' +
+    '<text x="84" y="24" font-family="Mali, cursive" font-weight="700" font-size="16" fill="#8C7EB8" class="sparkle-twinkle2">z</text>' +
     '</svg>';
 
   var ACTIVITY_ICONS = {
