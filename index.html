@@ -171,12 +171,24 @@
     .ctrl-wiggle{ animation:ctrlWiggle 1s ease-in-out infinite; transform-origin:50% 70%; }
     .btn-blink{ animation:btnBlink 1.2s ease-in-out infinite; }
     .book-rock{ animation:bookRock 2.2s ease-in-out infinite; transform-origin:50% 95%; }
+    .sparkle-twinkle{ animation:sparkleTwinkle 1.3s ease-in-out infinite; transform-origin:center; }
+    .sparkle-twinkle2{ animation:sparkleTwinkle 1.3s ease-in-out infinite .4s; transform-origin:center; }
+    .motion-lines{ animation:motionFade 1s ease-in-out infinite; }
+    .drop1{ animation:dropFall 1.4s ease-in infinite; }
+    .drop2{ animation:dropFall 1.4s ease-in infinite .3s; }
+    .drop3{ animation:dropFall 1.4s ease-in infinite .6s; }
+    .note-bounce1{ animation:noteBounce 1s ease-in-out infinite; }
+    .note-bounce2{ animation:noteBounce 1s ease-in-out infinite .3s; }
   }
   @keyframes steamRise{ 0%{ transform:translateY(0); opacity:.15; } 50%{ opacity:.85; } 100%{ transform:translateY(-10px); opacity:0; } }
   @keyframes glowPulse{ 0%,100%{ opacity:.55; } 50%{ opacity:1; } }
   @keyframes ctrlWiggle{ 0%,100%{ transform:rotate(-3deg); } 50%{ transform:rotate(3deg); } }
   @keyframes btnBlink{ 0%,100%{ opacity:1; } 50%{ opacity:.3; } }
   @keyframes bookRock{ 0%,100%{ transform:rotate(-2deg); } 50%{ transform:rotate(2deg); } }
+  @keyframes sparkleTwinkle{ 0%,100%{ opacity:.4; transform:scale(.85); } 50%{ opacity:1; transform:scale(1.1); } }
+  @keyframes motionFade{ 0%,100%{ opacity:.2; transform:translateX(0); } 50%{ opacity:.8; transform:translateX(-6px); } }
+  @keyframes dropFall{ 0%{ transform:translateY(0); opacity:.2; } 50%{ opacity:1; } 100%{ transform:translateY(8px); opacity:0; } }
+  @keyframes noteBounce{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-6px); } }
 
   .status-select{
     display:block; margin:4px auto 0; font-family:'Sarabun'; font-size:13px; padding:7px 10px;
@@ -228,6 +240,25 @@
     background:var(--paper-card); border-radius:18px; border:1.5px solid var(--paper-shadow);
     padding:20px 18px 18px; width:100%; max-width:360px; max-height:85vh; overflow-y:auto;
     box-shadow:0 30px 60px -20px rgba(0,0,0,0.4);
+    scrollbar-width:thin; scrollbar-color: var(--paper-shadow) transparent;
+  }
+  .modal::-webkit-scrollbar{ width:6px; }
+  .modal::-webkit-scrollbar-track{ background:transparent; }
+  .modal::-webkit-scrollbar-thumb{ background:var(--paper-shadow); border-radius:10px; }
+  .diary-modal{ max-width:440px; }
+  .diary-modal-actions{ display:flex; gap:10px; justify-content:center; margin-top:14px; }
+  .diary-modal-actions .modal-close{ margin:0; }
+  .d-head-big{ text-align:center; font-family:'Mali', cursive; font-weight:700; font-size:19px; margin-bottom:2px; }
+  .diary-person-block{ border-top:1px dashed var(--paper-shadow); padding-top:12px; margin-top:12px; }
+  .diary-ws-line{ font-size:12px; color:var(--ink-soft); margin-bottom:8px; }
+  .diary-textarea-big{
+    width:100%; font-family:'Sarabun'; font-size:15px; padding:12px;
+    border:1.5px solid var(--paper-shadow); border-radius:10px; background:var(--paper);
+    color:var(--ink); min-height:100px; resize:vertical;
+  }
+  .diary-readtext{
+    font-family:'Mali', cursive; font-size:16px; line-height:1.5; background:var(--paper);
+    border-radius:8px; padding:12px 14px; margin:0;
   }
   .modal-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
   .nav-btn{
@@ -299,7 +330,7 @@
   <header>
     <h1 class="app-title">จอแบน 🤍 ซันนี่</h1>
     <p class="date-line" id="dateLine">—</p>
-    <div class="time-chip" id="timeLine">00:00:00</div>
+    <div class="time-chip" id="timeLine">00:00</div>
   </header>
 
   <div class="anniv-banner" id="annivBanner">
@@ -330,7 +361,7 @@
 </div>
 
 <div class="modal-overlay" id="modalOverlay" hidden>
-  <div class="modal" role="dialog" aria-modal="true" aria-label="ไดอารี่และปฎิทินตื่น-นอน">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="ปฎิทินตื่น-นอน">
     <div class="modal-header">
       <button class="nav-btn" id="prevMonth" aria-label="เดือนก่อนหน้า">‹</button>
       <span class="modal-title" id="calTitle">—</span>
@@ -340,8 +371,26 @@
       <span>อา</span><span>จ</span><span>อ</span><span>พ</span><span>พฤ</span><span>ศ</span><span>ส</span>
     </div>
     <div class="cal-grid" id="calGrid"></div>
-    <div class="cal-detail" id="calDetail"></div>
     <button class="modal-close" id="modalClose">ปิด</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="diaryOverlay" hidden>
+  <div class="modal diary-modal" role="dialog" aria-modal="true" aria-label="ไดอารี่ประจำวัน">
+    <div id="diaryContent"></div>
+    <div class="diary-modal-actions">
+      <button class="modal-close" id="diaryBackBtn">← ปฎิทิน</button>
+      <button class="modal-close" id="diaryCloseBtn">ปิด</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="monthsaryOverlay" hidden>
+  <div class="modal" style="text-align:center; max-width:320px;">
+    <div style="font-size:46px; margin-bottom:6px;">🎉</div>
+    <p id="monthsaryText" style="font-family:'Mali', cursive; font-weight:700; font-size:19px; margin:0 0 6px;"></p>
+    <p style="font-size:12px; color:var(--ink-soft); margin:0 0 14px;">สุขสันต์วันครบรอบเล็กๆของเรา 💞</p>
+    <button class="modal-close" id="monthsaryClose">ปิด</button>
   </div>
 </div>
 
@@ -351,7 +400,7 @@
 (function(){
   var PEOPLE = ['จอแบน', 'ซันนี่'];
   var ACCENT = { 'จอแบน': 'jorbaen', 'ซันนี่': 'sunny' };
-  var STATUS_PRESETS = ['กินข้าว','ทำงาน','เล่นเกม','อ่านหนังสือ'];
+  var STATUS_PRESETS = ['กินข้าว','ทำงาน','เล่นเกม','อ่านหนังสือ','ดูอนิเมะ','ออกไปเลาะเที่ยว','อาบน้ำ','ฟังเพลง','คลีนบ้าน'];
   var ID_KEY = 'jsboard_whoami';
   var ANNIV_DATE = new Date(2023, 1, 8); // 8 กุมภาพันธ์ 2566
 
@@ -381,7 +430,12 @@
     nextMonth: document.getElementById('nextMonth'),
     calTitle: document.getElementById('calTitle'),
     calGrid: document.getElementById('calGrid'),
-    calDetail: document.getElementById('calDetail')
+    diaryOverlay: document.getElementById('diaryOverlay'),
+    diaryContent: document.getElementById('diaryContent'),
+    diaryBackBtn: document.getElementById('diaryBackBtn'),
+    diaryCloseBtn: document.getElementById('diaryCloseBtn'),
+    monthsaryOverlay: document.getElementById('monthsaryOverlay'),
+    monthsaryClose: document.getElementById('monthsaryClose')
   };
 
   function pad(n){ return String(n).padStart(2,'0'); }
@@ -446,7 +500,8 @@
       statusRef.on('value', function(snap){
         statusData = snap.val() || {};
         render();
-        if (!els.modalOverlay.hidden){ renderCalendar(); renderCalDetail(); }
+        if (!els.modalOverlay.hidden){ renderCalendar(); }
+        if (!els.diaryOverlay.hidden){ renderDiaryPopup(); }
       });
       stickyRef.on('value', function(snap){ stickyData = snap.val() || {}; render(); },
         function(){ els.syncStatus.textContent = '⚠️ เชื่อมคลาวด์ไม่สำเร็จ'; });
@@ -563,15 +618,17 @@
       card.appendChild(editHint);
     }
 
-    var wakeLine = document.createElement('div'); wakeLine.className = 'status-line';
-    wakeLine.innerHTML = '<span class="lbl">☀️ ตื่น</span><span class="val">' +
-      (wokeToday ? timeLabel(todayHist.wakeAt) + ' น.' : 'ยังไม่ตื่นวันนี้') + '</span>';
-    card.appendChild(wakeLine);
+    if (wokeToday){
+      var wakeLine = document.createElement('div'); wakeLine.className = 'status-line';
+      wakeLine.innerHTML = '<span class="lbl">☀️ ตื่น</span><span class="val">' + timeLabel(todayHist.wakeAt) + ' น.</span>';
+      card.appendChild(wakeLine);
+    }
 
-    var sleepLine = document.createElement('div'); sleepLine.className = 'status-line';
-    sleepLine.innerHTML = '<span class="lbl">🌙 นอน</span><span class="val">' +
-      (sleepToday ? timeLabel(todayHist.sleepAt) + ' น.' : 'ยังไม่นอน') + '</span>';
-    card.appendChild(sleepLine);
+    if (sleepToday){
+      var sleepLine = document.createElement('div'); sleepLine.className = 'status-line';
+      sleepLine.innerHTML = '<span class="lbl">🌙 นอน</span><span class="val">' + timeLabel(todayHist.sleepAt) + ' น.</span>';
+      card.appendChild(sleepLine);
+    }
 
     var sleepBefore = findSleepBeforeWake(name, todayHist.wakeAt);
     if (wokeToday && sleepBefore){
@@ -710,10 +767,10 @@
     var now = new Date();
     applyTheme(now);
     els.dateLine.textContent = now.toLocaleDateString('th-TH', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
-    els.timeLine.textContent = pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds());
+    els.timeLine.textContent = pad(now.getHours())+':'+pad(now.getMinutes());
     updateAnniversary(now);
     var t = isoDateOf(now);
-    if (t !== lastRenderedDate){ lastRenderedDate = t; render(); }
+    if (t !== lastRenderedDate){ lastRenderedDate = t; render(); checkMonthsary(); }
   }
 
   function render(){
@@ -726,7 +783,28 @@
     PEOPLE.forEach(function(name){ els.cardsRow.appendChild(buildCard(name)); });
   }
 
-  function showMain(){ els.gate.classList.add('hidden'); els.main.classList.remove('hidden'); render(); }
+  function getYearsMonths(from, to){
+    var years = to.getFullYear() - from.getFullYear();
+    var months = to.getMonth() - from.getMonth();
+    if (months < 0){ years--; months += 12; }
+    return { years: years, months: months };
+  }
+  function checkMonthsary(){
+    var now = new Date();
+    if (now.getDate() !== 8) return;
+    var todayStr = isoDateOf(now);
+    if (localStorage.getItem('monthsaryShown') === todayStr) return;
+    var diff = getYearsMonths(ANNIV_DATE, now);
+    var text = diff.years > 0
+      ? ('ครบรอบ ' + diff.years + ' ปี ' + diff.months + ' เดือนแล้ว!')
+      : ('ครบรอบ ' + diff.months + ' เดือนแล้ว!');
+    document.getElementById('monthsaryText').textContent = text;
+    els.monthsaryOverlay.hidden = false;
+    localStorage.setItem('monthsaryShown', todayStr);
+  }
+  els.monthsaryClose.addEventListener('click', function(){ els.monthsaryOverlay.hidden = true; });
+
+  function showMain(){ els.gate.classList.add('hidden'); els.main.classList.remove('hidden'); render(); checkMonthsary(); }
   function showGate(){ els.main.classList.add('hidden'); els.gate.classList.remove('hidden'); }
 
   document.querySelectorAll('.gate-btn').forEach(function(btn){
@@ -753,11 +831,17 @@
   }
   function openCalendar(){
     var now = new Date(); calYear = now.getFullYear(); calMonth = now.getMonth();
-    selectedDateIso = todayISO();
-    renderCalendar(); renderCalDetail();
+    renderCalendar();
     els.modalOverlay.hidden = false;
   }
   function closeCalendar(){ els.modalOverlay.hidden = true; }
+  function reopenCalendarModal(){ renderCalendar(); els.modalOverlay.hidden = false; }
+  function openDiaryPopup(iso){
+    selectedDateIso = iso; calDiaryDraft = null;
+    renderDiaryPopup();
+    els.diaryOverlay.hidden = false;
+  }
+  function closeDiaryPopup(){ els.diaryOverlay.hidden = true; }
   function renderCalendar(){
     var first = new Date(calYear, calMonth, 1);
     els.calTitle.textContent = first.toLocaleDateString('th-TH', { month:'long', year:'numeric' });
@@ -772,60 +856,76 @@
       if (dayHasData(iso)) btn.classList.add('has-data');
       if (iso === selectedDateIso) btn.classList.add('selected');
       btn.addEventListener('click', function(dIso){ return function(){
-        selectedDateIso = dIso; calDiaryDraft = null; renderCalendar(); renderCalDetail();
+        closeCalendar();
+        openDiaryPopup(dIso);
       }; }(iso));
       els.calGrid.appendChild(btn);
     }
   }
-  function renderCalDetail(){
+  function renderDiaryPopup(){
     var existingTextarea = document.getElementById('calDiaryInput');
     if (existingTextarea) calDiaryDraft = existingTextarea.value;
-    els.calDetail.innerHTML = '';
+    var container = els.diaryContent;
+    container.innerHTML = '';
     if (!selectedDateIso) return;
     var dateObj = new Date(selectedDateIso);
-    var head = document.createElement('div'); head.className='d-head';
+    var head = document.createElement('div'); head.className='d-head-big';
     head.textContent = dateObj.toLocaleDateString('th-TH', { day:'numeric', month:'long', year:'numeric' });
-    els.calDetail.appendChild(head);
+    container.appendChild(head);
 
     var diaryIconWrap = document.createElement('div'); diaryIconWrap.className = 'big-icon-wrap';
-    diaryIconWrap.style.margin = '4px auto 6px';
+    diaryIconWrap.style.margin = '6px auto 4px';
     diaryIconWrap.innerHTML = ICON_DIARY;
-    els.calDetail.appendChild(diaryIconWrap);
+    container.appendChild(diaryIconWrap);
 
     PEOPLE.forEach(function(name){
       var st = statusData[name] || {};
       var h = (st.history && st.history[selectedDateIso]) || {};
-      var line = document.createElement('div'); line.style.marginBottom = '3px';
-      line.textContent = name + ': ตื่น ' + (h.wakeAt ? timeLabel(h.wakeAt)+' น.' : 'ไม่มีข้อมูล') +
-        ' · นอน ' + (h.sleepAt ? timeLabel(h.sleepAt)+' น.' : 'ไม่มีข้อมูล');
-      els.calDetail.appendChild(line);
+      var personBlock = document.createElement('div'); personBlock.className = 'diary-person-block';
+
+      var pname = document.createElement('div'); pname.className = 'name-tag ' + ACCENT[name];
+      pname.style.fontSize = '17px'; pname.style.margin = '0 0 4px';
+      pname.textContent = name;
+      personBlock.appendChild(pname);
+
+      var wsline = document.createElement('div'); wsline.className = 'diary-ws-line';
+      wsline.textContent = '☀️ ตื่น ' + (h.wakeAt ? timeLabel(h.wakeAt)+' น.' : 'ไม่มีข้อมูล') +
+        '   🌙 นอน ' + (h.sleepAt ? timeLabel(h.sleepAt)+' น.' : 'ไม่มีข้อมูล');
+      personBlock.appendChild(wsline);
 
       var diaryVal = (st.diary && st.diary[selectedDateIso]) || '';
       if (name === myName){
-        var dWrap = document.createElement('div'); dWrap.style.margin = '4px 0 14px';
-        var dTextarea = document.createElement('textarea'); dTextarea.id = 'calDiaryInput'; dTextarea.className = 'diary-textarea';
+        var dTextarea = document.createElement('textarea'); dTextarea.id = 'calDiaryInput'; dTextarea.className = 'diary-textarea-big';
         dTextarea.placeholder = 'เขียนไดอารี่วันนี้...';
         dTextarea.value = calDiaryDraft !== null ? calDiaryDraft : diaryVal;
+        personBlock.appendChild(dTextarea);
         var dSaveBtn = document.createElement('button'); dSaveBtn.className = 'checkin-btn ' + ACCENT[myName];
-        dSaveBtn.textContent = 'บันทึกไดอารี่'; dSaveBtn.style.marginTop = '6px';
+        dSaveBtn.textContent = 'บันทึกไดอารี่'; dSaveBtn.style.marginTop = '8px';
         dSaveBtn.addEventListener('click', function(){
           writeDiary(myName, selectedDateIso, dTextarea.value);
           calDiaryDraft = null;
-          renderCalendar(); renderCalDetail();
+          renderDiaryPopup();
         });
-        dWrap.appendChild(dTextarea); dWrap.appendChild(dSaveBtn);
-        els.calDetail.appendChild(dWrap);
+        personBlock.appendChild(dSaveBtn);
       } else {
-        var dline = document.createElement('div'); dline.style.marginBottom = '12px'; dline.style.fontStyle = 'italic';
-        dline.textContent = '📔 ' + (diaryVal ? '"' + diaryVal + '"' : 'ยังไม่ได้เขียนวันนี้');
-        els.calDetail.appendChild(dline);
+        var dview = document.createElement('p'); dview.className = 'diary-readtext';
+        dview.textContent = diaryVal ? diaryVal : 'ยังไม่ได้เขียน';
+        personBlock.appendChild(dview);
       }
+      container.appendChild(personBlock);
     });
   }
   els.calOpenBtn.addEventListener('click', openCalendar);
   els.modalClose.addEventListener('click', closeCalendar);
   els.modalOverlay.addEventListener('click', function(e){ if (e.target === els.modalOverlay) closeCalendar(); });
-  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !els.modalOverlay.hidden) closeCalendar(); });
+  els.diaryBackBtn.addEventListener('click', function(){ closeDiaryPopup(); reopenCalendarModal(); });
+  els.diaryCloseBtn.addEventListener('click', closeDiaryPopup);
+  els.diaryOverlay.addEventListener('click', function(e){ if (e.target === els.diaryOverlay) closeDiaryPopup(); });
+  document.addEventListener('keydown', function(e){
+    if (e.key !== 'Escape') return;
+    if (!els.diaryOverlay.hidden) closeDiaryPopup();
+    else if (!els.modalOverlay.hidden) closeCalendar();
+  });
   els.prevMonth.addEventListener('click', function(){ calMonth--; if (calMonth<0){calMonth=11; calYear--;} renderCalendar(); });
   els.nextMonth.addEventListener('click', function(){ calMonth++; if (calMonth>11){calMonth=0; calYear++;} renderCalendar(); });
 
@@ -905,11 +1005,61 @@
     '<path d="M94,42 Q88,34 82,40 Q80,44 88,52 Q96,44 94,42 Z" fill="#E27272" stroke="#2B2420" stroke-width="2.5"/>' +
     '</svg>';
 
+  var ICON_ANIME = '<svg viewBox="0 0 120 120">' +
+    '<rect x="14" y="28" width="92" height="62" rx="8" fill="#7FA8D9" stroke="#2B2420" stroke-width="4"/>' +
+    '<rect x="22" y="36" width="76" height="46" rx="4" fill="#fff" stroke="#2B2420" stroke-width="3"/>' +
+    '<path d="M50,50 L72,59 L50,68 Z" fill="#2B2420"/>' +
+    '<line x1="40" y1="90" x2="30" y2="102" stroke="#2B2420" stroke-width="4" stroke-linecap="round"/>' +
+    '<line x1="80" y1="90" x2="90" y2="102" stroke="#2B2420" stroke-width="4" stroke-linecap="round"/>' +
+    '<path class="sparkle-twinkle" d="M96,16 L99,22 L105,25 L99,28 L96,34 L93,28 L87,25 L93,22 Z" fill="#FFD966" stroke="#2B2420" stroke-width="2"/>' +
+    '<path class="sparkle-twinkle2" d="M14,14 L16,18 L20,20 L16,22 L14,26 L12,22 L8,20 L12,18 Z" fill="#E27272" stroke="#2B2420" stroke-width="1.5"/>' +
+    '</svg>';
+
+  var ICON_OUT = '<svg viewBox="0 0 120 120">' +
+    '<g class="motion-lines">' +
+    '<line x1="4" y1="48" x2="18" y2="48" stroke="#2B2420" stroke-width="3" stroke-linecap="round"/>' +
+    '<line x1="0" y1="60" x2="14" y2="60" stroke="#2B2420" stroke-width="3" stroke-linecap="round"/>' +
+    '</g>' +
+    '<path d="M16,82 Q16,68 32,64 L70,56 Q82,52 92,58 L100,64 Q106,68 104,76 L102,86 Q100,92 92,92 L24,92 Q16,92 16,84 Z" fill="#E8DCC4" stroke="#2B2420" stroke-width="4"/>' +
+    '<path d="M32,64 L40,50 L56,48 L52,58 Z" fill="#7FA8D9" stroke="#2B2420" stroke-width="3"/>' +
+    '<line x1="44" y1="92" x2="44" y2="82" stroke="#2B2420" stroke-width="3"/>' +
+    '<line x1="60" y1="92" x2="60" y2="80" stroke="#2B2420" stroke-width="3"/>' +
+    '</svg>';
+
+  var ICON_BATH = '<svg viewBox="0 0 120 120">' +
+    '<path d="M30,20 Q60,4 90,20 L90,34 Q60,24 30,34 Z" fill="#A9C9DE" stroke="#2B2420" stroke-width="4"/>' +
+    '<circle cx="40" cy="40" r="3" fill="#2B2420"/><circle cx="55" cy="42" r="3" fill="#2B2420"/>' +
+    '<circle cx="70" cy="40" r="3" fill="#2B2420"/><circle cx="80" cy="36" r="3" fill="#2B2420"/>' +
+    '<path class="drop1" d="M40,52 Q44,60 40,66 Q36,60 40,52 Z" fill="#9CCBE0" stroke="#2B2420" stroke-width="2"/>' +
+    '<path class="drop2" d="M62,56 Q66,64 62,70 Q58,64 62,56 Z" fill="#9CCBE0" stroke="#2B2420" stroke-width="2"/>' +
+    '<path class="drop3" d="M82,50 Q86,58 82,64 Q78,58 82,50 Z" fill="#9CCBE0" stroke="#2B2420" stroke-width="2"/>' +
+    '</svg>';
+
+  var ICON_MUSIC = '<svg viewBox="0 0 120 120">' +
+    '<path d="M24,64 Q24,28 60,28 Q96,28 96,64" fill="none" stroke="#2B2420" stroke-width="6" stroke-linecap="round"/>' +
+    '<rect x="14" y="58" width="20" height="30" rx="8" fill="#E27272" stroke="#2B2420" stroke-width="4"/>' +
+    '<rect x="86" y="58" width="20" height="30" rx="8" fill="#E27272" stroke="#2B2420" stroke-width="4"/>' +
+    '<g class="note-bounce1"><circle cx="62" cy="78" r="6" fill="#2B2420"/><line x1="68" y1="78" x2="68" y2="56" stroke="#2B2420" stroke-width="3"/><path d="M68,56 L80,52 L80,60 L68,64 Z" fill="#2B2420"/></g>' +
+    '<g class="note-bounce2"><circle cx="46" cy="86" r="5" fill="#2B2420"/><line x1="51" y1="86" x2="51" y2="68" stroke="#2B2420" stroke-width="2.5"/></g>' +
+    '</svg>';
+
+  var ICON_CLEAN = '<svg viewBox="0 0 120 120">' +
+    '<line x1="70" y1="14" x2="50" y2="70" stroke="#A9784A" stroke-width="6" stroke-linecap="round"/>' +
+    '<path d="M50,70 L20,96 L34,98 L40,86 L48,98 L60,96 Z" fill="#F2D9A8" stroke="#2B2420" stroke-width="4"/>' +
+    '<path class="sparkle-twinkle" d="M86,78 L89,84 L95,87 L89,90 L86,96 L83,90 L77,87 L83,84 Z" fill="#FFD966" stroke="#2B2420" stroke-width="2"/>' +
+    '<circle class="sparkle-twinkle2" cx="70" cy="92" r="4" fill="#6FBE96" stroke="#2B2420" stroke-width="1.5"/>' +
+    '</svg>';
+
   var ACTIVITY_ICONS = {
     'กินข้าว': ICON_EAT,
     'ทำงาน': ICON_WORK,
     'เล่นเกม': ICON_GAME,
-    'อ่านหนังสือ': ICON_BOOK
+    'อ่านหนังสือ': ICON_BOOK,
+    'ดูอนิเมะ': ICON_ANIME,
+    'ออกไปเลาะเที่ยว': ICON_OUT,
+    'อาบน้ำ': ICON_BATH,
+    'ฟังเพลง': ICON_MUSIC,
+    'คลีนบ้าน': ICON_CLEAN
   };
 
   if (myName && PEOPLE.indexOf(myName) !== -1){ showMain(); } else { showGate(); }
