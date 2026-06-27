@@ -26,7 +26,7 @@
     --sunny-soft:#FBEDD3;
     --tape:#F2C9CE;
   }
-  body.theme-night{
+  body.theme-night, html.theme-night{
     --paper:#1F1B2E;
     --paper-card:#2B2640;
     --paper-shadow:#3D3656;
@@ -787,6 +787,8 @@
     var isDay = h >= 6 && h < 19;
     document.body.classList.toggle('theme-day', isDay);
     document.body.classList.toggle('theme-night', !isDay);
+    document.documentElement.classList.toggle('theme-day', isDay);
+    document.documentElement.classList.toggle('theme-night', !isDay);
   }
 
   function updateAnniversary(now){
